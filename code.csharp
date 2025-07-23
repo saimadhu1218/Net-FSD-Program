@@ -1,0 +1,124 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace StudentCourseEnrollmentSystem
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            var courseManager = new CourseManager();
+
+            // Sample data
+            courseManager.AddCourse("Math");
+            courseManager.AddCourse("Science");
+            courseManager.AddCourse("History");
+
+            var student1 = new Student(1, "Alice");
+            var student2 = new Student(2, "Liam");
+            var student3 = new Student(3, "Bob");
+
+            courseManager.EnrollStudent(student1, "Math");
+            courseManager.EnrollStudent(student1, "Science");
+            courseManager.EnrollStudent(student2, "Math");
+            courseManager.EnrollStudent(student3, "History");
+            courseManager.EnrollStudent(student3, "Math");
+
+            // Display all offered courses
+            Console.WriteLine("Offered Courses:");
+            foreach (var course in courseManager.GetAllCourses())
+            {
+                Console.WriteLine(course);
+            }
+
+            // Display students grouped by each course
+            Console.WriteLine("\nStudents Grouped by Course:");
+            courseManager.DisplayStudentsGroupedByCourse();
+
+            // Display courses for a specific student
+            Console.WriteLine("\nCourses for student 'Alice':");
+            var aliceCourses = courseManager.GetCoursesForStudent("Alice");
+            foreach (var course in aliceCourses)
+            {
+                Console.WriteLine(course);
+            }
+        }
+    }
+
+    public class Student
+    {
+        public int Id { get; }
+        public string Name { get; }
+
+        public Student(int id, string name)
+        {
+            Id = id;
+            Name = name;
+        }
+    }
+
+    public class Enrollment
+    {
+        public string CourseName { get; }
+        public Student Student { get; }
+        public DateTime EnrollmentDate { get; }
+
+        public Enrollment(string courseName, Student student, DateTime enrollmentDate)
+        {
+            CourseName = courseName;
+            Student = student;
+            EnrollmentDate = enrollmentDate;
+        }
+    }
+
+    public class CourseManager
+    {
+        private HashSet<string> courses = new HashSet<string>();
+        private List<Enrollment> enrollments = new List<Enrollment>();
+
+        public void AddCourse(string courseName)
+        {
+            courses.Add(courseName);
+        }
+
+        public IEnumerable<string> GetAllCourses()
+        {
+            return courses;
+        }
+
+        public void EnrollStudent(Student student, string courseName)
+        {
+            if (courses.Contains(courseName) && !IsStudentEnrolledInCourse(student, courseName))
+            {
+                enrollments.Add(new Enrollment(courseName, student, DateTime.Now));
+            }
+        }
+
+        private bool IsStudentEnrolledInCourse(Student student, string courseName)
+        {
+            return enrollments.Any(e => e.Student.Id == student.Id && e.CourseName == courseName);
+        }
+
+        public void DisplayStudentsGroupedByCourse()
+        {
+            var groupedEnrollments = enrollments.GroupBy(e => e.CourseName);
+
+            foreach (var group in groupedEnrollments)
+            {
+                Console.WriteLine($"Course: {group.Key}");
+                foreach (var enrollment in group)
+                {
+                    Console.WriteLine($" - {enrollment.Student.Name}");
+                }
+            }
+        }
+
+        public IEnumerable<string> GetCoursesForStudent(string studentName)
+        {
+            return enrollments
+                .Where(e => e.Student.Name.Equals(studentName, StringComparison.OrdinalIgnoreCase))
+                .Select(e => e.CourseName);
+        }
+    }
+}
